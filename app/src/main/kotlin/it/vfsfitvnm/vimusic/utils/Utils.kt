@@ -76,13 +76,8 @@ val Song.asMediaItem: MediaItem
         .setCustomCacheKey(id)
         .build()
 
-fun String?.thumbnail(size: Int): String? {
-    return when {
-        this?.startsWith("https://lh3.googleusercontent.com") == true -> "$this-w$size-h$size"
-        this?.startsWith("https://yt3.ggpht.com") == true -> "$this-w$size-h$size-s$size"
-        else -> this
-    }
-}
+fun String?.thumbnail(size: Int): String? =
+    this?.let { url -> it.vfsfitvnm.innertube.models.Thumbnail.resizeThumbnailUrl(url, size) }
 
 fun Uri?.thumbnail(size: Int): Uri? {
     return toString().thumbnail(size)?.toUri()

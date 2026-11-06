@@ -32,9 +32,11 @@ suspend fun Innertube.artistPage(body: BrowseBody): Result<Innertube.ArtistPage>
                 ?.findSectionByTitle(text)
         }
 
-        val songsSection = findSectionByTitle("Songs")?.musicShelfRenderer
+        // YouTube renamed "Songs" -> "Top songs" and "Singles" -> "Singles & EPs";
+        // the old names stay as fallbacks.
+        val songsSection = (findSectionByTitle("Top songs") ?: findSectionByTitle("Songs"))?.musicShelfRenderer
         val albumsSection = findSectionByTitle("Albums")?.musicCarouselShelfRenderer
-        val singlesSection = findSectionByTitle("Singles")?.musicCarouselShelfRenderer
+        val singlesSection = (findSectionByTitle("Singles & EPs") ?: findSectionByTitle("Singles"))?.musicCarouselShelfRenderer
 
         Innertube.ArtistPage(
             name = response

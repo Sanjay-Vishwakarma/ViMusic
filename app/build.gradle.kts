@@ -1,8 +1,30 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     kotlin("android")
     kotlin("kapt")
 }
+
+// Auto-increment: every APK build (assemble*/bundle*/install*) bumps the
+// version stored in version.properties. versionCode 20 = upstream 0.5.4, so
+// this fork's builds are 0.6.1 (code 21), 0.6.2 (code 22), ...
+val versionPropsFile = file("version.properties")
+val versionProps = Properties().apply {
+    if (versionPropsFile.exists()) versionPropsFile.inputStream().use { load(it) }
+}
+val isApkBuild = gradle.startParameter.taskNames.any { task ->
+    listOf("assemble", "bundle", "install").any { task.contains(it, ignoreCase = true) }
+}
+val appVersionCode: Int = (versionProps.getProperty("VERSION_CODE") ?: "20").toInt().let { current ->
+    if (isApkBuild) {
+        (current + 1).also { next ->
+            versionProps.setProperty("VERSION_CODE", next.toString())
+            versionPropsFile.outputStream().use { versionProps.store(it, "Auto-incremented on every APK build") }
+        }
+    } else current
+}
+val appVersionName = "0.6.${appVersionCode - 20}"
 
 android {
     compileSdk = 33
@@ -11,8 +33,8 @@ android {
         applicationId = "it.vfsfitvnm.vimusic"
         minSdk = 21
         targetSdk = 33
-        versionCode = 20
-        versionName = "0.5.4"
+        versionCode = appVersionCode
+        versionName = appVersionName
     }
 
     splits {

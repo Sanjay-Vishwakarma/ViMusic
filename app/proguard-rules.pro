@@ -32,3 +32,20 @@
 -dontwarn org.openjsse.javax.net.ssl.SSLSocket
 -dontwarn org.openjsse.net.ssl.OpenJSSE
 -dontwarn org.slf4j.impl.StaticLoggerBinder
+
+# ---- NewPipeExtractor (stream URL resolution) ----
+# Rhino runs YouTube's player JS (signature / throttling decipher) via reflection.
+-keep class org.schabi.newpipe.extractor.** { *; }
+-keep class org.mozilla.javascript.** { *; }
+-keep class org.mozilla.classfile.ClassFileWriter
+-keep class com.grack.nanojson.** { *; }
+-keep class org.jsoup.** { *; }
+-keep class com.google.protobuf.** { *; }
+-dontwarn org.mozilla.javascript.**
+-dontwarn javax.script.**
+-dontwarn java.beans.**
+-dontwarn jdk.dynalink.**
+-dontwarn org.jsoup.**
+-dontwarn com.google.re2j.**
+-dontwarn javax.annotation.**
+-dontwarn okhttp3.internal.platform.**

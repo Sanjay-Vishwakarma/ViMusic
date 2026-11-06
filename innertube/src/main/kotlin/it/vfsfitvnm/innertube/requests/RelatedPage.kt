@@ -26,11 +26,10 @@ suspend fun Innertube.relatedPage(body: NextBody) = runCatchingNonCancellable {
         ?.tabbedRenderer
         ?.watchNextTabbedResultsRenderer
         ?.tabs
-        ?.getOrNull(2)
-        ?.tabRenderer
-        ?.endpoint
-        ?.browseEndpoint
-        ?.browseId
+        // YouTube inserted a "Comments" tab, pushing "Related" from index 2
+        // to 3. Find it by its browseId prefix (MPTR…) instead of position.
+        ?.map { it.tabRenderer?.endpoint?.browseEndpoint?.browseId }
+        ?.let { ids -> ids.firstOrNull { it?.startsWith("MPTR") == true } ?: ids.getOrNull(2) }
         ?: return@runCatchingNonCancellable null
 
     val response = client.post(browse) {

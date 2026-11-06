@@ -14,7 +14,20 @@ data class BrowseResponse(
     data class Contents(
         val singleColumnBrowseResultsRenderer: Tabs?,
         val sectionListRenderer: SectionListRenderer?,
+        // Album / playlist pages since 2024: header in tabs[0], songs in secondaryContents
+        val twoColumnBrowseResultsRenderer: TwoColumnBrowseResultsRenderer?,
     )
+
+    @Serializable
+    data class TwoColumnBrowseResultsRenderer(
+        val tabs: List<Tabs.Tab>?,
+        val secondaryContents: SecondaryContents?,
+    ) {
+        @Serializable
+        data class SecondaryContents(
+            val sectionListRenderer: SectionListRenderer?,
+        )
+    }
 
     @Serializable
     data class Header @OptIn(ExperimentalSerializationApi::class) constructor(

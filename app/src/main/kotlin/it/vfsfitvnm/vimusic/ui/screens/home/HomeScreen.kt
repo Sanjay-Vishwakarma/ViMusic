@@ -108,10 +108,14 @@ fun HomeScreen(onPlaylistUrl: (String) -> Unit) {
         }
 
         host {
-            val (tabIndex, onTabChanged) = rememberPreference(
+            val (savedTabIndex, onTabChanged) = rememberPreference(
                 homeScreenTabIndexKey,
                 defaultValue = 0
             )
+            // Tabs 3 (Artists) and 4 (Albums) were removed - they only listed
+            // bookmarked items and stayed empty. A saved index pointing at
+            // them falls back to Quick picks.
+            val tabIndex = savedTabIndex.takeIf { it in setOf(0, 1, 2, 5, 6) } ?: 0
 
             Scaffold(
                 topIconButtonId = R.drawable.equalizer,
@@ -122,8 +126,8 @@ fun HomeScreen(onPlaylistUrl: (String) -> Unit) {
                     Item(0, "Quick picks", R.drawable.sparkles)
                     Item(1, "Songs", R.drawable.musical_notes)
                     Item(2, "Playlists", R.drawable.playlist)
-                    Item(3, "Artists", R.drawable.person)
-                    Item(4, "Albums", R.drawable.disc)
+                    Item(5, "Explore", R.drawable.globe)
+                    Item(6, "Local", R.drawable.library)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(key = currentTabIndex) {
@@ -145,13 +149,13 @@ fun HomeScreen(onPlaylistUrl: (String) -> Unit) {
                             onSearchClick = { searchRoute("") }
                         )
 
-                        3 -> HomeArtistList(
-                            onArtistClick = { artistRoute(it.id) },
+                        5 -> Explore(
+                            onAlbumClick = { albumRoute(it) },
+                            onArtistClick = { artistRoute(it) },
                             onSearchClick = { searchRoute("") }
                         )
 
-                        4 -> HomeAlbums(
-                            onAlbumClick = { albumRoute(it.id) },
+                        6 -> HomeLocal(
                             onSearchClick = { searchRoute("") }
                         )
                     }

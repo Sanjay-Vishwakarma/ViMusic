@@ -37,6 +37,7 @@ import it.vfsfitvnm.vimusic.enums.PlaylistSortBy
 import it.vfsfitvnm.vimusic.enums.SongSortBy
 import it.vfsfitvnm.vimusic.enums.SortOrder
 import it.vfsfitvnm.vimusic.models.Album
+import it.vfsfitvnm.vimusic.models.CatalogItem
 import it.vfsfitvnm.vimusic.models.Artist
 import it.vfsfitvnm.vimusic.models.SongWithContentLength
 import it.vfsfitvnm.vimusic.models.Event
@@ -312,7 +313,7 @@ interface Database {
     fun songArtistInfo(songId: String): List<Info>
 
     @Transaction
-    @Query("SELECT Song.* FROM Event JOIN Song ON Song.id = songId GROUP BY songId ORDER BY SUM(CAST(playTime AS REAL) / (((:now - timestamp) / 86400000) + 1)) DESC LIMIT 1")
+    @Query("SELECT Song.* FROM Event JOIN Song ON Song.id = songId WHERE songId NOT LIKE 'local:%' GROUP BY songId ORDER BY SUM(CAST(playTime AS REAL) / (((:now - timestamp) / 86400000) + 1)) DESC LIMIT 1")
     @RewriteQueriesToDropUnusedColumns
     fun trending(now: Long = System.currentTimeMillis()): Flow<Song?>
 
@@ -415,6 +416,17 @@ interface Database {
     @Upsert
     fun upsert(artist: Artist)
 
+    // ---- Explore catalog cache ----
+
+    @Query("SELECT * FROM CatalogItem WHERE category = :category AND kind = :kind AND browseId IS NOT NULL ORDER BY position")
+    fun catalogItems(category: String, kind: String): Flow<List<CatalogItem>>
+
+    @Query("SELECT * FROM CatalogItem WHERE category = :category")
+    fun catalogItemsNow(category: String): List<CatalogItem>
+
+    @Upsert
+    fun upsert(catalogItem: CatalogItem)
+
     @Delete
     fun delete(searchQuery: SearchQuery)
 
@@ -446,11 +458,12 @@ interface Database {
         Format::class,
         Event::class,
         Lyrics::class,
+        CatalogItem::class,
     ],
     views = [
         SortedSongPlaylistMap::class
     ],
-    version = 23,
+    version = 24,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
@@ -471,6 +484,8 @@ interface Database {
         AutoMigration(from = 19, to = 20),
         AutoMigration(from = 20, to = 21, spec = DatabaseInitializer.From20To21Migration::class),
         AutoMigration(from = 21, to = 22, spec = DatabaseInitializer.From21To22Migration::class),
+        // Adds the CatalogItem cache table only; existing data is untouched.
+        AutoMigration(from = 23, to = 24),
     ],
 )
 @TypeConverters(Converters::class)

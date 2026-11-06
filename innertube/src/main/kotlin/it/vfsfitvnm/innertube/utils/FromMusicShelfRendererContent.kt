@@ -22,15 +22,17 @@ fun Innertube.SongItem.Companion.from(content: MusicShelfRenderer.Content): Inne
                 ?.browseEndpoint
                 ?.type == "MUSIC_PAGE_TYPE_ALBUM"
         }
-        ?.let(Innertube::Info)
+        ?.browseInfo()
 
     return Innertube.SongItem(
+        // Safe casts: a run whose endpoint isn't a watch endpoint no longer
+        // throws ClassCastException and fails the whole search page.
         info = mainRuns
             .firstOrNull()
-            ?.let(Innertube::Info),
+            ?.watchInfo(content.musicResponsiveListItemRenderer?.playlistItemData?.videoId),
         authors = otherRuns
             .getOrNull(otherRuns.lastIndex - if (album == null) 1 else 2)
-            ?.map(Innertube::Info),
+            ?.map { it.browseInfo() },
         album = album,
         durationText = otherRuns
             .lastOrNull()
@@ -44,12 +46,14 @@ fun Innertube.VideoItem.Companion.from(content: MusicShelfRenderer.Content): Inn
     val (mainRuns, otherRuns) = content.runs
 
     return Innertube.VideoItem(
+        // Safe casts: a run whose endpoint isn't a watch endpoint no longer
+        // throws ClassCastException and fails the whole search page.
         info = mainRuns
             .firstOrNull()
-            ?.let(Innertube::Info),
+            ?.watchInfo(content.musicResponsiveListItemRenderer?.playlistItemData?.videoId),
         authors = otherRuns
             .getOrNull(otherRuns.lastIndex - 2)
-            ?.map(Innertube::Info),
+            ?.map { it.browseInfo() },
         viewsText = otherRuns
             .getOrNull(otherRuns.lastIndex - 1)
             ?.firstOrNull()

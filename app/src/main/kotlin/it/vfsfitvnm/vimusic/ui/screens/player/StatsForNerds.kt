@@ -71,7 +71,7 @@ fun StatsForNerds(
 
         LaunchedEffect(mediaId) {
             Database.format(mediaId).distinctUntilChanged().collectLatest { currentFormat ->
-                if (currentFormat?.itag == null) {
+                if (currentFormat?.itag == null && !it.vfsfitvnm.vimusic.local.LocalMusic.isLocal(mediaId)) {
                     binder.player.currentMediaItem?.takeIf { it.mediaId == mediaId }?.let { mediaItem ->
                         withContext(Dispatchers.IO) {
                             delay(2000)

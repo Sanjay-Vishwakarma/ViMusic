@@ -17,6 +17,8 @@ class MainApplication : Application(), ImageLoaderFactory {
 
     override fun newImageLoader(): ImageLoader {
         return ImageLoader.Builder(this)
+            // Cover art embedded in songs stored on the phone ("localart://<id>").
+            .components { add(it.vfsfitvnm.vimusic.local.LocalArtworkFetcher.Factory()) }
             .crossfade(true)
             .respectCacheHeaders(false)
             .diskCache(

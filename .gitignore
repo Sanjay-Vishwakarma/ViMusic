@@ -8,3 +8,17 @@
 .externalNativeBuild
 .cxx
 local.properties
+/dist
+
+# IDE build output (VS Code Java / Eclipse)
+bin/
+.vscode/
+.project
+.classpath
+.settings/
+
+# Never commit signing keys or built packages
+*.jks
+*.keystore
+*.apk
+*.aab

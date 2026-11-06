@@ -18,7 +18,18 @@ data class SectionListRenderer(
         val musicShelfRenderer: MusicShelfRenderer?,
         val gridRenderer: GridRenderer?,
         val musicDescriptionShelfRenderer: MusicDescriptionShelfRenderer?,
+        val musicResponsiveHeaderRenderer: MusicResponsiveHeaderRenderer?,
     ) {
+
+        // Album / playlist header (replaced header.musicDetailHeaderRenderer)
+        @Serializable
+        data class MusicResponsiveHeaderRenderer(
+            val title: Runs?,
+            val subtitle: Runs?,
+            val secondSubtitle: Runs?,
+            val straplineTextOne: Runs?,
+            val thumbnail: ThumbnailRenderer?,
+        )
 
         @Serializable
         data class MusicDescriptionShelfRenderer(

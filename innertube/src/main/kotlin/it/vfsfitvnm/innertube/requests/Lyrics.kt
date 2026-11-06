@@ -22,11 +22,10 @@ suspend fun Innertube.lyrics(body: NextBody): Result<String?>? = runCatchingNonC
         ?.tabbedRenderer
         ?.watchNextTabbedResultsRenderer
         ?.tabs
-        ?.getOrNull(1)
-        ?.tabRenderer
-        ?.endpoint
-        ?.browseEndpoint
-        ?.browseId
+        // Find the Lyrics tab by its browseId prefix (MPLY…), not by position:
+        // YouTube has already reordered these tabs once.
+        ?.map { it.tabRenderer?.endpoint?.browseEndpoint?.browseId }
+        ?.let { ids -> ids.firstOrNull { it?.startsWith("MPLY") == true } ?: ids.getOrNull(1) }
         ?: return@runCatchingNonCancellable null
 
     val response = client.post(browse) {

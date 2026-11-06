@@ -24,6 +24,8 @@ import android.media.audiofx.AudioEffect
 import android.media.audiofx.LoudnessEnhancer
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Handler
 import android.text.format.DateUtils
@@ -43,6 +45,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.ResolvingDataSource
 import androidx.media3.datasource.cache.Cache
@@ -66,7 +69,13 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.extractor.ExtractorsFactory
 import androidx.media3.extractor.mkv.MatroskaExtractor
+import androidx.media3.extractor.flac.FlacExtractor
+import androidx.media3.extractor.mp3.Mp3Extractor
 import androidx.media3.extractor.mp4.FragmentedMp4Extractor
+import androidx.media3.extractor.mp4.Mp4Extractor
+import androidx.media3.extractor.ogg.OggExtractor
+import androidx.media3.extractor.ts.AdtsExtractor
+import androidx.media3.extractor.wav.WavExtractor
 import it.vfsfitvnm.innertube.Innertube
 import it.vfsfitvnm.innertube.models.NavigationEndpoint
 import it.vfsfitvnm.innertube.models.bodies.PlayerBody
@@ -79,7 +88,7 @@ import it.vfsfitvnm.vimusic.models.Event
 import it.vfsfitvnm.vimusic.models.QueuedMediaItem
 import it.vfsfitvnm.vimusic.query
 import it.vfsfitvnm.vimusic.utils.InvincibleService
-import it.vfsfitvnm.vimusic.utils.RingBuffer
+import it.vfsfitvnm.vimusic.local.LocalMusic
 import it.vfsfitvnm.vimusic.utils.TimerJob
 import it.vfsfitvnm.vimusic.utils.YouTubeRadio
 import it.vfsfitvnm.vimusic.utils.activityPendingIntent
@@ -111,6 +120,7 @@ import kotlin.system.exitProcess
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.collectLatest
@@ -333,7 +343,65 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         }
     }
 
+    // ---- Playback error recovery ----------------------------------------
+    // Before this, ANY error (a network blip, an expired stream URL, one
+    // song YouTube refused) left ExoPlayer stopped until the user pressed
+    // Next. Now: retry the same song from the same position with a fresh URL,
+    // and after a few failures skip to the next song so the queue keeps going.
+    private var recoveryMediaId: String? = null
+    private var recoveryAttempts = 0
+    private var recoveryJob: Job? = null
+
+    override fun onPlayerError(error: PlaybackException) {
+        val mediaId = player.currentMediaItem?.mediaId
+        forgetStreamUrl(mediaId)
+
+        // The user paused (or nothing is queued): leave the error on screen.
+        if (!player.playWhenReady || mediaId == null) return
+
+        if (mediaId != recoveryMediaId) {
+            recoveryMediaId = mediaId
+            recoveryAttempts = 0
+        }
+
+        recoveryJob?.cancel()
+        recoveryJob = coroutineScope.launch(Dispatchers.Main) {
+            if (recoveryAttempts < MAX_RECOVERY_ATTEMPTS) {
+                recoveryAttempts++
+                delay(1500L * recoveryAttempts)
+                if (player.playerError != null && player.currentMediaItem?.mediaId == mediaId) {
+                    player.prepare() // resumes at the current position
+                    player.play()
+                }
+            } else if (player.hasNextMediaItem() && (isOnline() || LocalMusic.isLocal(mediaId))) {
+                // Offline, every song would fail the same way: stop here
+                // instead of racing through the whole queue.
+                recoveryAttempts = 0
+                player.seekToNextMediaItem()
+                player.prepare()
+                player.play()
+            }
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun isOnline(): Boolean {
+        val connectivityManager = getSystemService<ConnectivityManager>() ?: return true
+        return if (isAtLeastAndroid6) {
+            connectivityManager.activeNetwork
+                ?.let(connectivityManager::getNetworkCapabilities)
+                ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+        } else {
+            connectivityManager.activeNetworkInfo?.isConnected == true
+        }
+    }
+
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+        if (mediaItem?.mediaId != recoveryMediaId) {
+            recoveryJob?.cancel()
+            recoveryAttempts = 0
+            recoveryMediaId = mediaItem?.mediaId
+        }
         maybeRecoverPlaybackError()
         maybeNormalizeVolume()
         maybeProcessRadio()
@@ -478,7 +546,13 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             volumeNormalizationJob = coroutineScope.launch(Dispatchers.Main) {
                 Database.loudnessDb(songId).cancellable().collectLatest { loudnessDb ->
                     try {
-                        loudnessEnhancer?.setTargetGain(-((loudnessDb ?: 0f) * 100).toInt() + 500)
+                        // YouTube no longer returns loudness for the streams we
+                        // resolve. The old formula then applied a flat +5 dB to
+                        // every song, which clips modern (already loud) masters
+                        // and sounds distorted. Unknown loudness = no gain change.
+                        loudnessEnhancer?.setTargetGain(
+                            loudnessDb?.let { -(it * 100).toInt() + 500 } ?: 0
+                        )
                         loudnessEnhancer?.enabled = true
                     } catch (_: Exception) { }
                 }
@@ -742,25 +816,69 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             setUpstreamDataSourceFactory(
                 DefaultHttpDataSource.Factory()
                     .setConnectTimeoutMs(16000)
-                    .setReadTimeoutMs(8000)
+                    // 8 s was too tight on mobile networks: one slow read
+                    // failed the load and stopped playback.
+                    .setReadTimeoutMs(16000)
                     .setUserAgent("Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0")
             )
         }
     }
 
+    /**
+     * Resolved YouTube stream URLs, most recent 8 songs. Entries close to the
+     * URL's own "expire" time are ignored, and [onPlayerError] drops the
+     * entry of a failing song so a retry resolves a fresh URL.
+     */
+    private val streamUrls = object : LinkedHashMap<String, Uri>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Uri>?) = size > 8
+    }
+
+    private fun cachedStreamUrl(videoId: String): Uri? {
+        val uri = synchronized(streamUrls) { streamUrls[videoId] } ?: return null
+        val expiresAtMs = uri.getQueryParameter("expire")?.toLongOrNull()?.times(1000)
+        return uri.takeIf { expiresAtMs == null || expiresAtMs - System.currentTimeMillis() > 5 * 60 * 1000 }
+    }
+
+    private fun forgetStreamUrl(videoId: String?) {
+        videoId ?: return
+        synchronized(streamUrls) { streamUrls.remove(videoId) }
+    }
+
+    /** Opens content:// and file:// (local songs) directly, everything else via the YouTube cache chain. */
+    private fun createRoutingDataSourceFactory(): DataSource.Factory {
+        val localFactory = DefaultDataSource.Factory(this)
+        val remoteFactory = createCacheDataSource()
+        return DataSource.Factory {
+            LocalOrRemoteDataSource(localFactory.createDataSource(), remoteFactory.createDataSource())
+        }
+    }
+
     private fun createDataSourceFactory(): DataSource.Factory {
         val chunkLength = 512 * 1024L
-        val ringBuffer = RingBuffer<Pair<String, Uri>?>(2) { null }
 
-        return ResolvingDataSource.Factory(createCacheDataSource()) { dataSpec ->
+        return ResolvingDataSource.Factory(createRoutingDataSourceFactory()) { dataSpec ->
             val videoId = dataSpec.key ?: error("A key must be set")
 
-            if (cache.isCached(videoId, dataSpec.position, chunkLength)) {
+            // Songs on the device: play the file itself, no YouTube lookup.
+            if (LocalMusic.isLocal(videoId)) {
+                val localUri = dataSpec.uri.takeIf { it.scheme == "content" || it.scheme == "file" }
+                    ?: LocalMusic.contentUri(videoId)
+                    ?: throw PlaybackException("Local file not found", null, PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND)
+                if (dataSpec.position == 0L) {
+                    // Keep history / favourites / "Songs" working like for online songs.
+                    val mediaItem = runBlocking(Dispatchers.Main) { player.findNextMediaItemById(videoId) }
+                    mediaItem?.let { query { Database.insert(it) } }
+                }
+                dataSpec.withUri(localUri)
+            } else if (cache.isCached(videoId, dataSpec.position, chunkLength)) {
                 dataSpec
             } else {
-                when (videoId) {
-                    ringBuffer.getOrNull(0)?.first -> dataSpec.withUri(ringBuffer.getOrNull(0)!!.second)
-                    ringBuffer.getOrNull(1)?.first -> dataSpec.withUri(ringBuffer.getOrNull(1)!!.second)
+                val cachedUrl = cachedStreamUrl(videoId)
+                when {
+                    // Bounded chunks for reused URLs too (this path used to
+                    // request the whole rest of the file in one connection).
+                    cachedUrl != null -> dataSpec.withUri(cachedUrl)
+                        .subrange(dataSpec.uriPositionOffset, chunkLength)
                     else -> {
                         val urlResult = runBlocking(Dispatchers.IO) {
                             Innertube.player(PlayerBody(videoId = videoId))
@@ -817,7 +935,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                         }
 
                         urlResult?.getOrThrow()?.let { url ->
-                            ringBuffer.append(videoId to url.toUri())
+                            synchronized(streamUrls) { streamUrls[videoId] = url.toUri() }
                             dataSpec.withUri(url.toUri())
                                 .subrange(dataSpec.uriPositionOffset, chunkLength)
                         } ?: throw PlaybackException(
@@ -837,7 +955,18 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
     private fun createExtractorsFactory(): ExtractorsFactory {
         return ExtractorsFactory {
-            arrayOf(MatroskaExtractor(), FragmentedMp4Extractor())
+            arrayOf(
+                // YouTube streams (WebM/Opus, fragmented MP4/AAC) — tried first.
+                MatroskaExtractor(),
+                FragmentedMp4Extractor(),
+                // Local files.
+                Mp4Extractor(),
+                Mp3Extractor(),
+                FlacExtractor(),
+                OggExtractor(),
+                WavExtractor(),
+                AdtsExtractor(),
+            )
         }
     }
 
@@ -999,6 +1128,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     }
 
     private companion object {
+        const val MAX_RECOVERY_ATTEMPTS = 3
         const val NotificationId = 1001
         const val NotificationChannelId = "default_channel_id"
 

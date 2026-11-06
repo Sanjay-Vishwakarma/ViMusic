@@ -8,6 +8,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
+import it.vfsfitvnm.vimusic.ui.components.MusicBars
+import it.vfsfitvnm.vimusic.ui.styling.onOverlay
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -161,14 +170,48 @@ fun Player(
                     modifier = Modifier
                         .height(Dimensions.collapsedPlayer)
                 ) {
-                    AsyncImage(
-                        model = mediaItem.mediaMetadata.artworkUri.thumbnail(Dimensions.thumbnails.song.px),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
+                    Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .clip(thumbnailShape)
+                            .background(colorPalette.background2)
                             .size(48.dp)
-                    )
+                    ) {
+                        // Visible when the song has no artwork.
+                        Image(
+                            painter = painterResource(R.drawable.musical_notes),
+                            contentDescription = null,
+                            colorFilter = ColorFilter.tint(colorPalette.textDisabled),
+                            modifier = Modifier.size(20.dp)
+                        )
+
+                        AsyncImage(
+                            model = mediaItem.mediaMetadata.artworkUri.thumbnail(Dimensions.thumbnails.song.px),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+
+                        // Makes it obvious from the mini player that music is playing.
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = shouldBePlaying,
+                            enter = fadeIn(tween(400)),
+                            exit = fadeOut(tween(400)),
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .background(Color.Black.copy(alpha = 0.4f))
+                                    .fillMaxSize()
+                            ) {
+                                MusicBars(
+                                    color = colorPalette.onOverlay,
+                                    barWidth = 3.dp,
+                                    modifier = Modifier.height(18.dp)
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Column(

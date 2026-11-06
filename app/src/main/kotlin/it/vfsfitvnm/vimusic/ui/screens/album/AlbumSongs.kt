@@ -4,13 +4,16 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -85,13 +88,25 @@ fun AlbumSongs(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         headerContent {
-                            SecondaryTextButton(
-                                text = "Enqueue",
-                                enabled = songs.isNotEmpty(),
-                                onClick = {
-                                    binder?.player?.enqueue(songs.map(Song::asMediaItem))
-                                }
-                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                SecondaryTextButton(
+                                    text = "Play all",
+                                    enabled = songs.isNotEmpty(),
+                                    onClick = {
+                                        binder?.stopRadio()
+                                        binder?.player?.forcePlayFromBeginning(
+                                            songs.map(Song::asMediaItem)
+                                        )
+                                    }
+                                )
+                                SecondaryTextButton(
+                                    text = "Enqueue",
+                                    enabled = songs.isNotEmpty(),
+                                    onClick = {
+                                        binder?.player?.enqueue(songs.map(Song::asMediaItem))
+                                    }
+                                )
+                            }
                         }
 
                         if (!isLandscape) {

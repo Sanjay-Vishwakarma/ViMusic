@@ -205,12 +205,15 @@ fun BaseMediaItemMenu(
 ) {
     val context = LocalContext.current
 
+    val isLocal = it.vfsfitvnm.vimusic.local.LocalMusic.isLocal(mediaItem.mediaId)
+
     MediaItemMenu(
         mediaItem = mediaItem,
         onDismiss = onDismiss,
         onGoToEqualizer = onGoToEqualizer,
         onShowSleepTimer = onShowSleepTimer,
-        onStartRadio = onStartRadio,
+        // A YouTube radio can't be seeded from a file on the phone.
+        onStartRadio = onStartRadio.takeUnless { isLocal },
         onPlayNext = onPlayNext,
         onEnqueue = onEnqueue,
         onAddToPlaylist = { playlist, position ->
@@ -236,7 +239,13 @@ fun BaseMediaItemMenu(
                 type = "text/plain"
                 putExtra(
                     Intent.EXTRA_TEXT,
-                    "https://music.youtube.com/watch?v=${mediaItem.mediaId}"
+                    if (isLocal) {
+                        // No public link for a file on this phone: share the name.
+                        listOfNotNull(mediaItem.mediaMetadata.title, mediaItem.mediaMetadata.artist)
+                            .joinToString(" - ")
+                    } else {
+                        "https://music.youtube.com/watch?v=${mediaItem.mediaId}"
+                    }
                 )
             }
 

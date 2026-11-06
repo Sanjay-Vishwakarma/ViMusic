@@ -8,7 +8,19 @@ import kotlinx.serialization.json.JsonNames
 @Serializable
 data class ContinuationResponse(
     val continuationContents: ContinuationContents?,
+    // New-style continuation pages
+    val onResponseReceivedActions: List<ResponseReceivedAction>? = null,
 ) {
+    @Serializable
+    data class ResponseReceivedAction(
+        val appendContinuationItemsAction: AppendContinuationItemsAction?,
+    ) {
+        @Serializable
+        data class AppendContinuationItemsAction(
+            val continuationItems: List<MusicShelfRenderer.Content>?,
+        )
+    }
+
     @Serializable
     data class ContinuationContents(
         @JsonNames("musicPlaylistShelfContinuation")

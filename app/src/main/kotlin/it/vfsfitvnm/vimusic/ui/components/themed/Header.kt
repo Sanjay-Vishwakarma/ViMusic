@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -19,8 +20,12 @@ import androidx.compose.ui.unit.dp
 import it.vfsfitvnm.vimusic.ui.styling.Dimensions
 import it.vfsfitvnm.vimusic.ui.styling.LocalAppearance
 import it.vfsfitvnm.vimusic.ui.styling.shimmer
+import it.vfsfitvnm.vimusic.utils.isLandscape
 import it.vfsfitvnm.vimusic.utils.medium
 import kotlin.random.Random
+
+/** Tab titles shown by the Scaffold's bottom tab bar (index -> title). */
+val LocalTabTitles = staticCompositionLocalOf<Map<Int, String>> { emptyMap() }
 
 @Composable
 fun Header(
@@ -29,6 +34,21 @@ fun Header(
     actionsContent: @Composable RowScope.() -> Unit = {},
 ) {
     val typography = LocalAppearance.current.typography
+
+    // Portrait: the bottom tab bar already names this screen ("Quick picks",
+    // "Songs", ...), so only the action buttons are kept here.
+    if (!isLandscape && title in LocalTabTitles.current.values) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+            modifier = modifier
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .heightIn(min = 32.dp)
+                .fillMaxWidth(),
+            content = actionsContent,
+        )
+        return
+    }
 
     Header(
         modifier = modifier,
@@ -44,6 +64,12 @@ fun Header(
     )
 }
 
+/**
+ * Original ViMusic header layout: title centred on the right, actions along
+ * the bottom. Screens rely on this (the search screen's text field is the
+ * title, and its actions use a weighted Spacer), so it must not be turned
+ * into a single Row — doing that squeezed the search field to zero width.
+ */
 @Composable
 fun Header(
     modifier: Modifier = Modifier,
