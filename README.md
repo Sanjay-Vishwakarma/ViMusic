@@ -1,8 +1,13 @@
-# ViMusic (revived fork)
+# SjMusic (revived fork)
 
 YouTube Music se gaane stream karne wala Android app. Ye original
 [vfsfitvnm/ViMusic](https://github.com/vfsfitvnm/ViMusic) **v0.5.4** (Sept 2023, ab archived) ka fork hai,
 jise November 2026 mein dobara chalu kiya gaya.
+
+## Download
+
+**[⬇ Latest SjMusic APK download karo](https://github.com/Sanjay-Vishwakarma/ViMusic/releases/latest)** —
+Releases page pe `SjMusic-x.y.z.apk` file pe tap karo aur install karo.
 
 - **Koi server ya Supabase nahi.** Saara data phone ke local database mein rehta hai.
 - **App ka flow wahi hai.** Sirf wo hisse theek kiye gaye jo YouTube ne tod diye the, aur ek naya Explore tab joda gaya.
@@ -104,7 +109,7 @@ Ye script:
 1. JDK 17 khud dhundh leti hai.
 2. Live stream test chalati hai. Gaane nahi baj rahe hon to build rok deti hai.
 3. Release APK banati hai. Version apne aap badhta hai.
-4. APK ko `dist\ViMusic-0.6.X.apk` naam se copy karti hai.
+4. APK ko `dist\SjMusic-0.6.X.apk` naam se copy karti hai.
 
 Test chhodna ho to: `tools\build-apk.ps1 -SkipTests`
 
@@ -155,8 +160,8 @@ Agar "Failed to find target android-33" aaye, to error ke saath aane wala **Inst
 
 | Variant | Kya milta hai |
 |---|---|
-| **release** | Asli app "ViMusic", R8 se chhota (~4 MB). Purane installed app ke upar install hota hai. **Yahi use karo** |
-| debug | Alag app "Debug" (`it.vfsfitvnm.vimusic.debug`), bada aur slow. Sirf debugging ke liye |
+| **release** | Asli app "SjMusic", R8 se chhota (~4 MB). Purane installed app ke upar install hota hai. **Yahi use karo** |
+| debug | Alag app "Debug" (`it.sjmusic.vimusic.debug`), bada aur slow. Sirf debugging ke liye |
 
 ### Step 6: APK banao
 **Build → Build App Bundle(s) / APK(s) → Build APK(s)**
@@ -211,7 +216,7 @@ Kisi khaas version ke liye: `tools\update-newpipe.ps1 -Version v0.26.6`. Sirf te
 
 **Agar compile error aaye (`Unresolved reference ...`):** NewPipe ne apne function ke naam badal diye hain. Library se juda saara code
 **ek hi file** mein hai:
-[`innertube/src/main/kotlin/it/vfsfitvnm/innertube/newpipe/NewPipeStreams.kt`](innertube/src/main/kotlin/it/vfsfitvnm/innertube/newpipe/NewPipeStreams.kt).
+[`innertube/src/main/kotlin/it/sjmusic/innertube/newpipe/NewPipeStreams.kt`](innertube/src/main/kotlin/it/sjmusic/innertube/newpipe/NewPipeStreams.kt).
 Sirf use naye API ke hisaab se theek karo. Baaki app ko pata bhi nahi ki NewPipe use ho raha hai.
 
 **Agar "metadata is 1.9.0, expected 1.7.1" jaisa error aaye:** naye version ki koi dependency naya Kotlin laa rahi hai.
@@ -224,13 +229,13 @@ mein `-keep class <package>.** { *; }` jodo.
 
 | Nishaan | Kahan dekhna hai | Kya hua hoga |
 |---|---|---|
-| Quick picks khaali | [`requests/RelatedPage.kt`](innertube/src/main/kotlin/it/vfsfitvnm/innertube/requests/RelatedPage.kt) | "Related" tab ka ID (`MPTR`) ya sections ke naam ("You might also like", "Similar artists"…) badle |
-| Lyrics nahi aate | [`requests/Lyrics.kt`](innertube/src/main/kotlin/it/vfsfitvnm/innertube/requests/Lyrics.kt) | Lyrics tab ka ID (`MPLY`) badla |
-| Album/playlist page khaali | [`requests/PlaylistPage.kt`](innertube/src/main/kotlin/it/vfsfitvnm/innertube/requests/PlaylistPage.kt) | Layout ya field mask badla. **Galat field mask pe YouTube poori request ko HTTP 400 de deta hai** |
-| Artist page pe songs/albums nahi | [`requests/ArtistPage.kt`](innertube/src/main/kotlin/it/vfsfitvnm/innertube/requests/ArtistPage.kt) | Section ke naam ("Top songs", "Albums", "Singles & EPs") badle |
-| Search mein naam ya duration galat | [`models/MusicShelfRenderer.kt`](innertube/src/main/kotlin/it/vfsfitvnm/innertube/models/MusicShelfRenderer.kt), [`utils/FromMusicShelfRendererContent.kt`](innertube/src/main/kotlin/it/vfsfitvnm/innertube/utils/FromMusicShelfRendererContent.kt) | Columns ka order badla |
-| Thumbnails dhundhle | [`models/Thumbnail.kt`](innertube/src/main/kotlin/it/vfsfitvnm/innertube/models/Thumbnail.kt) | Image host ya size format badla |
-| Explore mein galat ya gayab album/artist | [`catalog/CatalogResolver.kt`](innertube/src/main/kotlin/it/vfsfitvnm/innertube/catalog/CatalogResolver.kt), [`catalog/IndianMusicCatalog.kt`](innertube/src/main/kotlin/it/vfsfitvnm/innertube/catalog/IndianMusicCatalog.kt) | Naam ki spelling badli. Entry mein `aliases` jodo |
+| Quick picks khaali | [`requests/RelatedPage.kt`](innertube/src/main/kotlin/it/sjmusic/innertube/requests/RelatedPage.kt) | "Related" tab ka ID (`MPTR`) ya sections ke naam ("You might also like", "Similar artists"…) badle |
+| Lyrics nahi aate | [`requests/Lyrics.kt`](innertube/src/main/kotlin/it/sjmusic/innertube/requests/Lyrics.kt) | Lyrics tab ka ID (`MPLY`) badla |
+| Album/playlist page khaali | [`requests/PlaylistPage.kt`](innertube/src/main/kotlin/it/sjmusic/innertube/requests/PlaylistPage.kt) | Layout ya field mask badla. **Galat field mask pe YouTube poori request ko HTTP 400 de deta hai** |
+| Artist page pe songs/albums nahi | [`requests/ArtistPage.kt`](innertube/src/main/kotlin/it/sjmusic/innertube/requests/ArtistPage.kt) | Section ke naam ("Top songs", "Albums", "Singles & EPs") badle |
+| Search mein naam ya duration galat | [`models/MusicShelfRenderer.kt`](innertube/src/main/kotlin/it/sjmusic/innertube/models/MusicShelfRenderer.kt), [`utils/FromMusicShelfRendererContent.kt`](innertube/src/main/kotlin/it/sjmusic/innertube/utils/FromMusicShelfRendererContent.kt) | Columns ka order badla |
+| Thumbnails dhundhle | [`models/Thumbnail.kt`](innertube/src/main/kotlin/it/sjmusic/innertube/models/Thumbnail.kt) | Image host ya size format badla |
+| Explore mein galat ya gayab album/artist | [`catalog/CatalogResolver.kt`](innertube/src/main/kotlin/it/sjmusic/innertube/catalog/CatalogResolver.kt), [`catalog/IndianMusicCatalog.kt`](innertube/src/main/kotlin/it/sjmusic/innertube/catalog/IndianMusicCatalog.kt) | Naam ki spelling badli. Entry mein `aliases` jodo |
 
 **Fix ka tareeka:** pehle sambandhit test chalao ([section 8](#8-tests)). Wo dikhata hai ki kya null ya khaali aa raha hai.
 Phir YouTube ka asli response dekh ke parser theek karo, test dobara chalao, phir `tools\build-apk.ps1`.
@@ -262,7 +267,7 @@ Report: `innertube/build/reports/tests/test/index.html`
 ## 9. Explore catalog badalna
 
 Saari list sirf **naamon** ki hai, yahan:
-[`innertube/src/main/kotlin/it/vfsfitvnm/innertube/catalog/IndianMusicCatalog.kt`](innertube/src/main/kotlin/it/vfsfitvnm/innertube/catalog/IndianMusicCatalog.kt)
+[`innertube/src/main/kotlin/it/sjmusic/innertube/catalog/IndianMusicCatalog.kt`](innertube/src/main/kotlin/it/sjmusic/innertube/catalog/IndianMusicCatalog.kt)
 
 ```kotlin
 CatalogAlbum("Aashiqui 2", "Mithoon", year = "2013")          // title, artist hint, saal
@@ -281,7 +286,7 @@ CatalogArtist("Avadhoot Gupte", aliases = listOf("Avdhoot Gupte")) // YouTube ki
 ```
 ViMusic/
 ├─ app/                         Android app (UI, player, Room database)
-│  ├─ src/main/kotlin/it/vfsfitvnm/vimusic/
+│  ├─ src/main/kotlin/it/sjmusic/vimusic/
 │  │  ├─ service/PlayerService.kt     ExoPlayer, cache, stream resolve, notification
 │  │  ├─ catalog/CatalogRepository.kt Explore: resolve + Room cache
 │  │  ├─ models/CatalogItem.kt        Explore cache table (DB v24)
@@ -319,7 +324,7 @@ compileSdk/targetSdk 33, minSdk 21 (Android 5.0+).
 | `Failed to find target android-33` | SDK Manager se Android 13 (API 33) install karo |
 | Install pe "App not installed" / conflict | Signing key alag hai (original ViMusic ya naya PC). Uninstall karke install karo, aur [backup](#3-zaroori-cheezein) rakho |
 | Gaana shuru hone mein der | Naye gaane ka URL nikalne mein 2 se 6 sec lagte hain, ye normal hai. Cache wale turant chalte hain |
-| Screen band hone pe gaana ruke | Phone settings → Apps → ViMusic → Battery → **Unrestricted** |
+| Screen band hone pe gaana ruke | Phone settings → Apps → SjMusic → Battery → **Unrestricted** |
 | Aawaz kharab | Player mein album art long-press → *Stats for nerds* → Itag 251 aur ~150 kbps hona chahiye. Volume normalization off karke dekho. Phone ka Dolby/EQ check karo |
 | Local tab mein gaane nahi | "Allow" dabao. Pehle mana kiya tha to "Open settings" → Permissions → Music and audio → Allow. Sirf 30 second se lambe music files dikhte hain (ringtone aur voice notes nahi) |
 | Explore khaali, "Retry" | Internet check karo. Pehli baar data YouTube se aata hai, uske baad cache se offline bhi dikhta hai |

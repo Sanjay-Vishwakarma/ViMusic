@@ -1,5 +1,5 @@
-import it.vfsfitvnm.innertube.catalog.CatalogResolver
-import it.vfsfitvnm.innertube.catalog.IndianMusicCatalog
+import it.sjmusic.innertube.catalog.CatalogResolver
+import it.sjmusic.innertube.catalog.IndianMusicCatalog
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Test

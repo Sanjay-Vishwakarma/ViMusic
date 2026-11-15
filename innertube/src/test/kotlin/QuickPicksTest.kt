@@ -1,11 +1,11 @@
-import it.vfsfitvnm.innertube.Innertube
-import it.vfsfitvnm.innertube.models.bodies.BrowseBody
-import it.vfsfitvnm.innertube.models.bodies.NextBody
-import it.vfsfitvnm.innertube.requests.albumPage
-import it.vfsfitvnm.innertube.requests.artistPage
-import it.vfsfitvnm.innertube.requests.lyrics
-import it.vfsfitvnm.innertube.requests.playlistPage
-import it.vfsfitvnm.innertube.requests.relatedPage
+import it.sjmusic.innertube.Innertube
+import it.sjmusic.innertube.models.bodies.BrowseBody
+import it.sjmusic.innertube.models.bodies.NextBody
+import it.sjmusic.innertube.requests.albumPage
+import it.sjmusic.innertube.requests.artistPage
+import it.sjmusic.innertube.requests.lyrics
+import it.sjmusic.innertube.requests.playlistPage
+import it.sjmusic.innertube.requests.relatedPage
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -68,7 +68,7 @@ class QuickPicksTest {
         println("large playlist first page=${first.songsPage?.items?.size} hasMore=${token != null}")
         assertTrue("no continuation token", token != null)
         val next = Innertube.playlistPage(
-            it.vfsfitvnm.innertube.models.bodies.ContinuationBody(continuation = token!!)
+            it.sjmusic.innertube.models.bodies.ContinuationBody(continuation = token!!)
         )!!.getOrThrow()
         println("large playlist second page=${next?.items?.size}")
         assertTrue("second page empty", !next?.items.isNullOrEmpty())

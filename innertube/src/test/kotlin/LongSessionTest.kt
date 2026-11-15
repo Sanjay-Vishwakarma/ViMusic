@@ -1,8 +1,8 @@
-import it.vfsfitvnm.innertube.Innertube
-import it.vfsfitvnm.innertube.models.bodies.NextBody
-import it.vfsfitvnm.innertube.models.bodies.PlayerBody
-import it.vfsfitvnm.innertube.requests.player
-import it.vfsfitvnm.innertube.requests.relatedPage
+import it.sjmusic.innertube.Innertube
+import it.sjmusic.innertube.models.bodies.NextBody
+import it.sjmusic.innertube.models.bodies.PlayerBody
+import it.sjmusic.innertube.requests.player
+import it.sjmusic.innertube.requests.relatedPage
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlinx.coroutines.runBlocking

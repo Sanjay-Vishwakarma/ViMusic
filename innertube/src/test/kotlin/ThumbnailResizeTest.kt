@@ -1,4 +1,4 @@
-import it.vfsfitvnm.innertube.models.Thumbnail.Companion.resizeThumbnailUrl
+import it.sjmusic.innertube.models.Thumbnail.Companion.resizeThumbnailUrl
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

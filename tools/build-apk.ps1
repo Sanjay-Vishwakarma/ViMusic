@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Builds the release APK (version auto-increments) and copies it to dist\ViMusic-<version>.apk
+  Builds the release APK (version auto-increments) and copies it to dist\SjMusic-<version>.apk
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File tools\build-apk.ps1
@@ -38,7 +38,7 @@ try {
     $code = (Select-String -Path 'app\version.properties' -Pattern '^VERSION_CODE=(\d+)').Matches[0].Groups[1].Value
     $name = "0.6.$([int]$code - 20)"
     New-Item -ItemType Directory -Force -Path 'dist' | Out-Null
-    $out = "dist\ViMusic-$name.apk"
+    $out = "dist\SjMusic-$name.apk"
     Copy-Item 'app\build\outputs\apk\release\app-release.apk' $out -Force
 
     Write-Host "`nDONE: version $name (code $code)" -ForegroundColor Green

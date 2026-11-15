@@ -4,17 +4,16 @@ plugins {
 }
 
 android {
-    namespace = "it.vfsfitvnm.compose.persist"
-    compileSdk = 33
+    namespace = "it.sjmusic.compose.persist"
+    compileSdk = 34
 
     defaultConfig {
         minSdk = 21
-        targetSdk = 33
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
         }
     }
@@ -28,8 +27,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     composeOptions {
@@ -37,7 +36,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
 }
 

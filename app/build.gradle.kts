@@ -26,11 +26,23 @@ val appVersionCode: Int = (versionProps.getProperty("VERSION_CODE") ?: "20").toI
 }
 val appVersionName = "0.6.${appVersionCode - 20}"
 
+// Release signing comes from local.properties (gitignored), e.g.
+//   signing.storeFile=E\:/0-4 Android/vimusic/debug.keystore
+//   signing.storePassword=android
+//   signing.keyAlias=androiddebugkey
+//   signing.keyPassword=android
+// If these keys are missing, release falls back to the default debug key.
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+val releaseStoreFile = localProps.getProperty("signing.storeFile")?.let { file(it) }?.takeIf { it.exists() }
+
 android {
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
-        applicationId = "it.vfsfitvnm.vimusic"
+        applicationId = "it.sjmusic.vimusic"
         minSdk = 21
         targetSdk = 33
         versionCode = appVersionCode
@@ -44,7 +56,18 @@ android {
         }
     }
 
-    namespace = "it.vfsfitvnm.vimusic"
+    namespace = "it.sjmusic.vimusic"
+
+    signingConfigs {
+        if (releaseStoreFile != null) {
+            create("release") {
+                storeFile = releaseStoreFile
+                storePassword = localProps.getProperty("signing.storePassword")
+                keyAlias = localProps.getProperty("signing.keyAlias")
+                keyPassword = localProps.getProperty("signing.keyPassword")
+            }
+        }
+    }
 
     buildTypes {
         debug {
@@ -55,8 +78,8 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            manifestPlaceholders["appName"] = "ViMusic"
-            signingConfig = signingConfigs.getByName("debug")
+            manifestPlaceholders["appName"] = "SjMusic"
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -67,12 +90,13 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     composeOptions {
@@ -81,7 +105,7 @@ android {
 
     kotlinOptions {
         freeCompilerArgs += "-Xcontext-receivers"
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
 }
 

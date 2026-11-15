@@ -11,12 +11,12 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         create("libs") {
-            version("kotlin", "1.7.20")
+            version("kotlin", "1.9.25")
             plugin("kotlin-serialization","org.jetbrains.kotlin.plugin.serialization").versionRef("kotlin")
 
             library("kotlin-coroutines","org.jetbrains.kotlinx", "kotlinx-coroutines-core").version("1.6.4")
 
-            version("compose-compiler", "1.3.2")
+            version("compose-compiler", "1.5.15")
 
             version("compose", "1.3.0-rc01")
             library("compose-foundation", "androidx.compose.foundation", "foundation").versionRef("compose")
@@ -30,7 +30,7 @@ dependencyResolutionManagement {
 
             library("compose-coil", "io.coil-kt", "coil-compose").version("2.2.2")
 
-            version("room", "2.5.0-beta01")
+            version("room", "2.6.1")
             library("room", "androidx.room", "room-ktx").versionRef("room")
             library("room-compiler", "androidx.room", "room-compiler").versionRef("room")
 
@@ -62,7 +62,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ViMusic"
+rootProject.name = "SjMusic"
 include(":app")
 include(":compose-routing")
 include(":compose-reordering")
